@@ -1,6 +1,9 @@
 #include "Button.h"
+#include "MinimalEEPROM.h"
 
-Button btn(A1);  // Кнопка на пине A1
+MinimalEEPROM eeprom;     //Работа с памятью EEPROM
+Button configButton(A1);  // Кнопка на пине A1 - конфигурация, сброс
+Button mainButton(A0);    // Кнопка на пине A0 - старт счетчика
 
 void setup() {
   Serial.begin(9600);
@@ -8,13 +11,13 @@ void setup() {
 
 void loop() {
 
-  btn.update();
+  configButton.update();
 
-  if (btn.isClick()) {
-    Serial.println("жмякнули кнопку");
+  if (configButton.isClick()) {
+    Serial.println(eeprom.getMaxReplacementTime());
   }
 
-  if (btn.isLongPress()) {
-    Serial.println("долго уерживаем кнопку");
+  if (configButton.isLongPress()) {
+    Serial.println(eeprom.getMaxOperatingTime());
   }
 }
