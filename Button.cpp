@@ -1,7 +1,7 @@
 #include "Button.h"
 
-Button::Button(uint8_t pin, HardwareSerial& serial, uint16_t holdTime, uint16_t debounce)
-  : _pin(pin), _holdTime(holdTime), _debounce(debounce),serial(serial) {
+Button::Button(uint8_t pin, uint16_t holdTime, uint16_t debounce)
+  : _pin(pin), _holdTime(holdTime), _debounce(debounce) {
 
   pinMode(_pin, INPUT_PULLUP);     // Настраиваем пин как вход с подтяжкой к питанию
   _rawState = !digitalRead(_pin);  // Считываем начальное состояние (инвертировано)

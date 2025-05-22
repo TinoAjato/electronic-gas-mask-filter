@@ -1,11 +1,12 @@
+#include "HardwareSerial.h"
 #include "ConfigurationMode.h"
 
 ConfigurationMode::ConfigurationMode(Button &configBtn, MinimalEEPROM &eepromObj,
-                                     uint8_t greenPin, uint8_t redPin, uint8_t buzzer)
-  : button(configBtn), eeprom(eepromObj),
-    ledGreenPin(greenPin), ledRedPin(redPin), buzzerPin(buzzer),
-    configModeActive(false), level(1),
-    lastBlinkTime(0), ledState(false) {
+                                     uint8_t greenPin, uint8_t redPin, uint8_t buzzer, const uint8_t (&pins)[MAX_PINS_SIZE])
+  : button(configBtn), eeprom(eepromObj), ledGreenPin(greenPin), ledRedPin(redPin), buzzerPin(buzzer),
+    configModeActive(false), level(1), lastBlinkTime(0), ledState(false) {
+  // Копируем массив пинов DIP-переключателя
+  memcpy(this->pins, pins, sizeof(this->pins));
 }
 
 void ConfigurationMode::begin() {
@@ -17,13 +18,14 @@ void ConfigurationMode::begin() {
   // Установим их в LOW (выключено)
   digitalWrite(ledGreenPin, LOW);
   digitalWrite(ledRedPin, LOW);
-  digitalWrite(buzzerPin, LOW);
 
-  // Настроим пины DIP как входы с подтяжкой
-  pinMode(A2, INPUT_PULLUP);
-  pinMode(A3, INPUT_PULLUP);
-  pinMode(A4, INPUT_PULLUP);
-  pinMode(A5, INPUT_PULLUP);
+  digitalWrite(buzzerPin, LOW);
+  //noTone(buzzerPin);
+
+  // Настроим пины DIP-переключателя как входы с подтяжкой
+  for (uint8_t i = 0; i < MAX_PINS_SIZE; i++) {
+    pinMode(pins[i], INPUT_PULLUP);
+  }
 
   // Обнулим состояние режима и таймера мигания
   configModeActive = false;
@@ -45,8 +47,9 @@ void ConfigurationMode::update() {
       // Сбросить мигание при входе
       ledState = false;
       lastBlinkTime = millis();
-    }//для отладки заккоментил
-     /*else if (button.isClick()) {
+    }  //для отладки заккоментил
+    /*
+    else if (button.isClick()) {
       // Одиночный клик вне режима конфигурации -> сброс CurrentOperatingTime
       eeprom.saveCurrentOperatingTime(0);
     }*/
@@ -63,9 +66,11 @@ void ConfigurationMode::update() {
     // Отключаем индикацию
     digitalWrite(ledGreenPin, LOW);
     digitalWrite(ledRedPin, LOW);
+
     // Звук поворотника
     digitalWrite(buzzerPin, LOW);
     //noTone(buzzerPin);
+
     configModeActive = false;
     return;
   }
@@ -104,10 +109,11 @@ void ConfigurationMode::update() {
     digitalWrite(buzzerPin, ledState ? HIGH : LOW);
     /*
     if(ledState) {
-      tone(buzzerPin, 500);
+      tone(buzzerPin, 900);
     }else {
       noTone(buzzerPin);
-    }*/
+    }
+    */
   }
 }
 
@@ -116,16 +122,16 @@ bool ConfigurationMode::isActive() const {
   return configModeActive;
 }
 
-// Приватный метод: чтение 4-битного DIP (A2..A5)
-// Используем INPUT_PULLUP: LOW (0) = переключатель замкнут (вкл), HIGH (1) = разомкнут (выкл).
+// Используем INPUT_PULLUP: LOW (0) = переключатель замкнут (вкл), HIGH (1) = разомкнут (выкл)
 uint8_t ConfigurationMode::readDIP() {
   uint8_t value = 0;
-  // Бит 3 -> A2, бит 2 -> A3, бит 1 -> A4, бит 0 -> A5
-  if (digitalRead(A5) == LOW) value |= 1;  // переключатель замкнут
-  if (digitalRead(A4) == LOW) value |= 2;
-  if (digitalRead(A3) == LOW) value |= 4;
-  if (digitalRead(A2) == LOW) value |= 8;
-  // Полученное число от 0 до 15. Если 0, считаем, что пользователь не задал значение.
+  // Читаем пины чтобы младший бит соответствовал последнему переключателю
+  for (int i = 0; i < MAX_PINS_SIZE; i++) {
+    if (digitalRead(pins[i]) == LOW) {
+      value |= (1 << (MAX_PINS_SIZE - 1 - i));  // A2 → бит 3, A5 → бит 0
+    }
+  }
+  // Полученное число от 0 до 15. Если 0, считаем, что пользователь не задал значение
   return value;
 }
 

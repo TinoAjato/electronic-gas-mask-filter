@@ -5,15 +5,17 @@
 #include "Button.h"
 #include "MinimalEEPROM.h"
 
+#define MAX_PINS_SIZE 4 // Размер массива пинов DIP-переключателя
+
 // Управляет режимом настройки параметров:
 // - MaxOperatingTime (в секундах, диапазон 1–15 минут)
 // - MaxReplacementTime (в секундах, диапазон 5–75 секунд с шагом 5).
 class ConfigurationMode {
 public:
   // Конструктор: принимает ссылку на объект кнопки, объект EEPROM,
-  // а также номера пинов зелёного светодиода, красного светодиода и пищалки.
+  // а также номера пинов зелёного светодиода, красного светодиода, пищалки и пинов DIP-переключателя
   ConfigurationMode(Button &configBtn, MinimalEEPROM &eeprom,
-                    uint8_t greenLedPin, uint8_t redLedPin, uint8_t buzzerPin);
+                    uint8_t greenLedPin, uint8_t redLedPin, uint8_t buzzerPin, const uint8_t (&pins)[MAX_PINS_SIZE]);
 
   // установка режимов пинов
   void begin();
@@ -30,6 +32,7 @@ private:
   uint8_t ledGreenPin;    // Пин зелёного светодиода
   uint8_t ledRedPin;      // Пин красного светодиода
   uint8_t buzzerPin;      // Пин пищалки
+  uint8_t pins[MAX_PINS_SIZE];  // Пины DIP-переключателя
 
   bool configModeActive;  // Флаг: включен ли режим конфигурирования
   uint8_t level;          // Текущий уровень (1 или 2)

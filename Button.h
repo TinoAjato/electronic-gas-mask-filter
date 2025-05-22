@@ -6,7 +6,7 @@
 class Button {
 public:
   // Конструктор: принимает пин, длительность долгого нажатия (в мс), и задержку дребезга
-  Button(uint8_t pin, HardwareSerial& serial, uint16_t holdTime = 1500, uint16_t debounce = 50);
+  Button(uint8_t pin, uint16_t holdTime = 1500, uint16_t debounce = 50);
 
   // Обновление состояния кнопки, нужно вызывать каждый цикл loop()
   void update();
@@ -46,8 +46,6 @@ private:
   bool _clickFlag = false;         // Флаг клика
   bool _longPressFlag = false;     // Флаг долгого нажатия
   bool _longPressHandled = false;  // Указывает, было ли уже обработано долгое нажатие
-
-  HardwareSerial& serial;
 };
 
 #endif
