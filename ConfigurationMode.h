@@ -5,7 +5,7 @@
 #include "Button.h"
 #include "MinimalEEPROM.h"
 
-#define MAX_PINS_SIZE 4 // Размер массива пинов DIP-переключателя
+#define MAX_PINS_SIZE 4  // Размер массива пинов DIP-переключателя
 
 // Управляет режимом настройки параметров:
 // - MaxOperatingTime (в секундах, диапазон 1–15 минут)
@@ -27,12 +27,15 @@ public:
   bool isActive() const;
 
 private:
-  Button &button;         // Кнопка конфигурации
-  MinimalEEPROM &eeprom;  // Объект работы с EEPROM
-  uint8_t ledGreenPin;    // Пин зелёного светодиода
-  uint8_t ledRedPin;      // Пин красного светодиода
-  uint8_t buzzerPin;      // Пин пищалки
+  Button &button;               // Кнопка конфигурации
+  MinimalEEPROM &eeprom;        // Объект работы с EEPROM
+  uint8_t ledGreenPin;          // Пин зелёного светодиода
+  uint8_t ledRedPin;            // Пин красного светодиода
+  uint8_t buzzerPin;            // Пин пищалки
   uint8_t pins[MAX_PINS_SIZE];  // Пины DIP-переключателя
+
+  // Период мигания (мс)
+  static const int BLINK_INTERVAL = 500;
 
   bool configModeActive;  // Флаг: включен ли режим конфигурирования
   uint8_t level;          // Текущий уровень (1 или 2)

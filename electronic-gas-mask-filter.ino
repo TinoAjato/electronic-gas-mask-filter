@@ -2,14 +2,20 @@
 #include "MinimalEEPROM.h"
 #include "ConfigurationMode.h"
 
-MinimalEEPROM eeprom;               //Работа с памятью EEPROM
-Button configButton(A1, 1500, 50);  // Кнопка на пине A1 - конфигурация, сброс
-//Button mainButton(A0);    // Кнопка на пине A0 - старт счетчика
+//******* Работа с памятью EEPROM *******
+MinimalEEPROM eeprom;
 
+//******* МОДУЛЬ КОНФИГУРАЦИИ *******
+// Кнопка - конфигурация, сброс
+Button configButton(3, 1500, 50);
 // Массив пинов кнопок DIP-переключателя
-uint8_t buttonPinsDIP[] = { A2, A3, A4, A5 };
-// Обьявляем модуль конфигурации с пинами для зелёного 8, красного 9, зуммера 10 и массив для DIP-переключателя
-ConfigurationMode configMode(configButton, eeprom, 8, 9, 10, buttonPinsDIP);
+uint8_t buttonPinsDIP[] = { 7, 6, 5, 4 };
+// Обьявляем модуль конфигурации с пинами для зелёного, красного, зуммера и массив для DIP-переключателя
+ConfigurationMode configurationModule(configButton, eeprom, 11, 12, 13, buttonPinsDIP);
+
+//******* ГЛАВНЫЙ МОДУЛЬ *******
+// Кнопка - старт счетчика
+Button mainButton(2);
 
 void setup() {
   Serial.begin(9600);
@@ -17,22 +23,22 @@ void setup() {
     ;  // Ожидание USB-соединения
 
   // Инициализация модуля конфигурации
-  configMode.begin();
-
-  Serial.println("setup -> end");
+  configurationModule.begin();
 }
 
 void loop() {
 
-  configMode.update();
-  if (configMode.isActive()) {
+  // Обрабатываем конфигурацию
+  configurationModule.update();
+  if (configurationModule.isActive()) {
     return;  // корректно выходим в окно в режиме конфигурации
   }
 
   // еще не придумал
 
 
-  if (configButton.isClick()) {
+  mainButton.update();
+  if (mainButton.isClick()) {
     Serial.print("Максимальное время работы в секундах: ");
     uint32_t val = eeprom.getMaxOperatingTime();
     Serial.print(val);

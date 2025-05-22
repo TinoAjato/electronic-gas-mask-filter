@@ -35,7 +35,7 @@ void ConfigurationMode::begin() {
 }
 
 void ConfigurationMode::update() {
-  // Сначала обновляем состояние кнопки
+  // Сначала обновляем состояние кнопки конфигурации
   button.update();
 
   if (!configModeActive) {
@@ -47,12 +47,11 @@ void ConfigurationMode::update() {
       // Сбросить мигание при входе
       ledState = false;
       lastBlinkTime = millis();
-    }  //для отладки заккоментил
-    /*
-    else if (button.isClick()) {
+    } else if (button.isClick()) {
       // Одиночный клик вне режима конфигурации -> сброс CurrentOperatingTime
       eeprom.saveCurrentOperatingTime(0);
-    }*/
+    }
+
     // Внешний режим, просто выходим
     return;
   }
@@ -63,6 +62,10 @@ void ConfigurationMode::update() {
     // Сохраняем значение текущего уровня (если != 0) и выходим
     uint8_t dip = readDIP();
     saveCurrentLevelValue(dip);
+
+    // Сбрасываем CurrentOperatingTime
+    eeprom.saveCurrentOperatingTime(0);
+
     // Отключаем индикацию
     digitalWrite(ledGreenPin, LOW);
     digitalWrite(ledRedPin, LOW);
@@ -89,11 +92,12 @@ void ConfigurationMode::update() {
 
   // Обновляем мигание светодиода и звук зуммера
   unsigned long currentTime = millis();
-  const unsigned long blinkInterval = 500;  // период мигания (мс)
-  if (currentTime - lastBlinkTime >= blinkInterval) {
+
+  if (currentTime - lastBlinkTime >= BLINK_INTERVAL) {
     // Время переключить состояние светодиода
     lastBlinkTime = currentTime;
     ledState = !ledState;
+
     // Включаем соответствующий светодиод и пищалку
     if (level == 1) {
       // Уровень 1: зелёный LED
@@ -104,6 +108,7 @@ void ConfigurationMode::update() {
       digitalWrite(ledRedPin, ledState ? HIGH : LOW);
       digitalWrite(ledGreenPin, LOW);
     }
+
     // Зуммер в такт миганию LED
     // Звук поворотника
     digitalWrite(buzzerPin, ledState ? HIGH : LOW);
