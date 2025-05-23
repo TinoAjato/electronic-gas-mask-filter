@@ -49,6 +49,7 @@ void ConfigurationMode::update() {
       lastBlinkTime = millis();
     } else if (button.isClick()) {
       // Одиночный клик вне режима конфигурации -> сброс CurrentOperatingTime
+      Serial.println("saveCurrentOperatingTime(0)");
       eeprom.saveCurrentOperatingTime(0);
     }
 
@@ -148,7 +149,7 @@ void ConfigurationMode::saveCurrentLevelValue(uint8_t dipValue) {
   }
   if (level == 1) {
     // Level 1: время работы (минуты -> секунды)
-    uint32_t seconds = (uint32_t)dipValue * 60;
+    uint32_t seconds = (uint32_t)dipValue * 5;
     eeprom.saveMaxOperatingTime(seconds);
   } else {
     // Level 2: время замены (каждое значение *5 сек)

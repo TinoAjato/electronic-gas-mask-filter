@@ -1,3 +1,4 @@
+#include "HardwareSerial.h"
 #include "MinimalEEPROM.h"
 
 // Заглушка
@@ -49,9 +50,9 @@ void MinimalEEPROM::saveCurrentOperatingTime(uint32_t seconds) {
 
   // Записываем только при изменении, чтобы не изнашивать EEPROM
   if (existing != seconds) {
-    EEPROM.put(ADDR_CURRENT_TIME, seconds);  // Сохраняем значение
+    EEPROM.put(ADDR_CURRENT_TIME, seconds);                     // Сохраняем значение
     uint16_t crc = crc16((uint8_t*)&seconds, sizeof(seconds));  // Вычисляем CRC
-    EEPROM.put(ADDR_CURRENT_TIME_CRC, crc);  // Записываем CRC после данных
+    EEPROM.put(ADDR_CURRENT_TIME_CRC, crc);                     // Записываем CRC после данных
   }
 }
 
@@ -81,6 +82,11 @@ uint32_t MinimalEEPROM::getCurrentOperatingTime() {
 
   // Считаем CRC от прочитанного значения
   uint16_t computed_crc = crc16((uint8_t*)&val, sizeof(val));
+
+  Serial.print("CURRENT_TIME");
+  Serial.println(val);
+  Serial.print("computed_crc == stored_crc? -> ");
+  Serial.println(computed_crc == stored_crc);
 
   // Если CRC совпало — возвращаем значение, иначе — сброс
   if (computed_crc == stored_crc) {
