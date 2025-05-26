@@ -35,6 +35,11 @@ void IndicationModule::buzzerOff() {
  * Останавливает мигание зелёного светодиода, если оно было
  */
 void IndicationModule::GREEN_ON(unsigned int durationMs) {
+
+  if (greenState.active && greenState.duration == durationMs) {
+    return;
+  }
+
   greenState = OneShotState(true, millis(), durationMs);
   greenBlink.active = false;  // Отключаем мигание
   digitalWrite(greenPin, HIGH);
@@ -65,6 +70,11 @@ void IndicationModule::GREEN_BLINK(unsigned int durationMs, unsigned int periodM
  * Запуск бесконечного мигания зелёного светодиода с периодом periodMs
  */
 void IndicationModule::GREEN_BLINK_FOREVER(unsigned int periodMs) {
+
+  if (greenBlink.active && greenBlink.period == periodMs) {
+    return;
+  }
+
   greenBlink = BlinkState(true, false, millis(), millis(), 0, periodMs);
   greenState.active = false;
   digitalWrite(greenPin, LOW);
@@ -78,6 +88,11 @@ void IndicationModule::GREEN_BLINK_FOREVER(unsigned int periodMs) {
  * Останавливает мигание красного светодиода, если оно было
  */
 void IndicationModule::RED_ON(unsigned int durationMs) {
+
+  if (redState.active && redState.duration == durationMs) {
+    return;
+  }
+
   redState = OneShotState(true, millis(), durationMs);
   redBlink.active = false;  // Отключаем мигание
   digitalWrite(redPin, HIGH);
@@ -108,6 +123,11 @@ void IndicationModule::RED_BLINK(unsigned int durationMs, unsigned int periodMs)
  * Запуск бесконечного мигания красного светодиода с периодом periodMs
  */
 void IndicationModule::RED_BLINK_FOREVER(unsigned int periodMs) {
+
+  if (redBlink.active && redBlink.period == periodMs) {
+    return;
+  }
+
   redBlink = BlinkState(true, false, millis(), millis(), 0, periodMs);
   redState.active = false;
   digitalWrite(redPin, LOW);
@@ -121,6 +141,11 @@ void IndicationModule::RED_BLINK_FOREVER(unsigned int periodMs) {
  * Останавливает мигание пищалки, если оно было
  */
 void IndicationModule::BEEP_ON(unsigned int durationMs) {
+
+  if (buzzerState.active && buzzerState.duration == durationMs) {
+    return;
+  }
+
   buzzerState = OneShotState(true, millis(), durationMs);
   buzzerBlink.active = false;  // Отключаем мигание
   buzzerOn();
@@ -148,9 +173,14 @@ void IndicationModule::BEEP_BLINK(unsigned int durationMs, unsigned int periodMs
   buzzerOff();  // Гарантируем, что пищалка изначально выключена
 }
 /**
- * Запуск бесконечного мигания пищалкой с периодом periodMs
+ * Запуск бесконечного мигания пищалкой с периодом periodMs и частотой звука buzzerFrequency
  */
 void IndicationModule::BEEP_BLINK_FOREVER(unsigned int periodMs) {
+
+  if (buzzerBlink.active && buzzerBlink.period == periodMs) {
+    return;
+  }
+
   buzzerBlink = BlinkState(true, false, millis(), millis(), 0, periodMs);
   buzzerState.active = false;
   buzzerOff();
@@ -158,6 +188,16 @@ void IndicationModule::BEEP_BLINK_FOREVER(unsigned int periodMs) {
 
 /* ******************************* */
 
+/**
+ * Выключение всего
+ */
+void IndicationModule::ALL_OFF() {
+  GREEN_OFF();
+  RED_OFF();
+  BEEP_OFF();
+}
+
+/* ******************************* */
 /**
  * Метод update() должен вызываться в основном цикле loop()
  * Отвечает за обновление состояний однократных включений и миганий

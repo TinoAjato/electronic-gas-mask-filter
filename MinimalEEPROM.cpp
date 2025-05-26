@@ -1,9 +1,8 @@
 #include "HardwareSerial.h"
 #include "MinimalEEPROM.h"
 
-// Заглушка
 void MinimalEEPROM::begin() {
-  // инициализациz EEPROM
+  // инициализация EEPROM
 }
 
 // Вычисление CRC-16 (алгоритм Modbus)
@@ -82,11 +81,6 @@ uint32_t MinimalEEPROM::getCurrentOperatingTime() {
 
   // Считаем CRC от прочитанного значения
   uint16_t computed_crc = crc16((uint8_t*)&val, sizeof(val));
-
-  Serial.print("CURRENT_TIME");
-  Serial.println(val);
-  Serial.print("computed_crc == stored_crc? -> ");
-  Serial.println(computed_crc == stored_crc);
 
   // Если CRC совпало — возвращаем значение, иначе — сброс
   if (computed_crc == stored_crc) {

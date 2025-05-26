@@ -1,12 +1,12 @@
-#include "MainOperation.h"
+#include "MainCounterModule.h"
 #include <Arduino.h>
 
-MainOperation::MainOperation(Button& btn, MinimalEEPROM& eep, uint8_t greenLed, uint8_t redLed, uint8_t buzzer)
+MainCounterModule::MainCounterModule(Button& btn, MinimalEEPROM& eep, uint8_t greenLed, uint8_t redLed, uint8_t buzzer)
   : mainButton(btn), eeprom(eep), pinGreen(greenLed), pinRed(redLed), pinBuzzer(buzzer),
     currentLevel(LEVEL_NONE), sessionActive(false), memoryCurrentOperatingTime(0),
     delayInProgress(false), delayStartMillis(0), sessionStartMillis(0), lastEepromSaveMillis(0) {}
 
-void MainOperation::begin() {
+void MainCounterModule::begin() {
   pinMode(pinGreen, OUTPUT);
   pinMode(pinRed, OUTPUT);
   pinMode(pinBuzzer, OUTPUT);
@@ -17,14 +17,14 @@ void MainOperation::begin() {
   // Заглушка — читаем уровень из EEPROM, когда будет реализовано
   currentLevel = LEVEL_OPERATING;  // по умолчанию стартуем с первого уровня
 
-  Serial.println("MainOperation::begin");
+  Serial.println("MainCounterModule::begin");
   Serial.print("MemoryCurrentOperatingTime: ");
   Serial.println(memoryCurrentOperatingTime);
   Serial.print("CurrentLevel: ");
   Serial.println(currentLevel);
 }
 
-void MainOperation::update() {
+void MainCounterModule::update() {
   mainButton.update();
 
   if (mainButton.isPressed()) {
@@ -45,9 +45,9 @@ void MainOperation::update() {
   }
 }
 
-void MainOperation::startSession() {
+void MainCounterModule::startSession() {
 
-  Serial.println("MainOperation::startSession");
+  Serial.println("MainCounterModule::startSession");
 
   sessionActive = true;
   delayInProgress = true;
@@ -57,9 +57,9 @@ void MainOperation::startSession() {
   setLedAndBuzzer(true, false, true);
 }
 
-void MainOperation::stopSession() {
+void MainCounterModule::stopSession() {
 
-  Serial.println("MainOperation::stopSession");
+  Serial.println("MainCounterModule::stopSession");
 
   sessionActive = false;
   delayInProgress = false;
@@ -78,7 +78,7 @@ void MainOperation::stopSession() {
   setLedAndBuzzer(false, false, false);
 }
 
-void MainOperation::updateSession() {
+void MainCounterModule::updateSession() {
   if (delayInProgress) {
     if (millis() - delayStartMillis >= 1500) {
       delayInProgress = false;
@@ -125,13 +125,13 @@ void MainOperation::updateSession() {
   }
 }
 
-void MainOperation::setLedAndBuzzer(bool greenOn, bool redOn, bool buzzerOn) {
+void MainCounterModule::setLedAndBuzzer(bool greenOn, bool redOn, bool buzzerOn) {
   digitalWrite(pinGreen, greenOn ? HIGH : LOW);
   digitalWrite(pinRed, redOn ? HIGH : LOW);
   digitalWrite(pinBuzzer, buzzerOn ? HIGH : LOW);
 }
 
-void MainOperation::blinkRedAndBeep() {
+void MainCounterModule::blinkRedAndBeep() {
   bool state = (millis() / 500) % 2 == 0;
   digitalWrite(pinRed, state ? HIGH : LOW);
   digitalWrite(pinBuzzer, state ? HIGH : LOW);

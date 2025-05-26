@@ -1,44 +1,35 @@
 #include "Button.h"
 #include "MinimalEEPROM.h"
-#include "ConfigurationMode.h"
-#include "MainOperation.h"
+#include "ConfigurationModule.h"
+#include "MainCounterModule.h"
 #include "IndicationModule.h"
 
 //******* Работа с памятью EEPROM *******
 MinimalEEPROM eeprom;
 
+//******* МОДУЛЬ ИНДИКАЦИИ *******
+// Объявляем модуль индикации со светодиодами (green, red) и пищалкой (buzzer)
+IndicationModule indicationModule(11, 12, 13);
+
 //******* МОДУЛЬ КОНФИГУРАЦИИ *******
 // Кнопка - конфигурация, сброс
-Button configButton(3, 1500, 50);
-// Массив пинов кнопок DIP-переключателя
-uint8_t buttonPinsDIP[] = { 7, 6, 5, 4 };
-// Обьявляем модуль конфигурации с пинами для зелёного, красного, зуммера и массив для DIP-переключателя
-ConfigurationMode configurationModule(configButton, eeprom, 11, 12, 13, buttonPinsDIP);
+Button configurationButton(3, 1500, 50);
+// Массив пинов DIP-переключателя
+uint8_t DIPPins[] = { 7, 6, 5, 4 };
+// Обьявляем модуль конфигурации
+ConfigurationModule configurationModule(configurationButton, eeprom, DIPPins, indicationModule);
 
 //******* ГЛАВНЫЙ МОДУЛЬ *******
 // Кнопка - старт счетчика
-Button mainButton(2);
+Button counterButton(2);
 // Объявляем модуль счетчика
-MainOperation mainModule(mainButton, eeprom, 11, 12, 13);
-
-IndicationModule indication(11, 12, 13);
-int mode = -1;
+//MainCounterModule mainCounterModule(counterButton, eeprom, 11, 12, 13);
 
 void setup() {
+  /** НА УДАЛЕНИЕ **/
   Serial.begin(9600);
   while (!Serial)
     ;  // Ожидание USB-соединения
-
-  indication.begin();
-
-  /*
-  // Инициализация модуля конфигурации
-  configurationModule.begin();
-  // Инициализация модуля счетчика
-  mainModule.begin();
-
-
-
 
   Serial.print("Максимальное время работы в секундах: ");
   uint32_t val = eeprom.getMaxOperatingTime();
@@ -56,14 +47,32 @@ void setup() {
   val = eeprom.getCurrentOperatingTime();
   Serial.print(val);
   Serial.print("; В минутах: ");
-  Serial.println((uint32_t)val / 60);*/
+  Serial.println((uint32_t)val / 60);
+  /** НА УДАЛЕНИЕ **/
+
+
+  // Инициализация модуля индикации
+  indicationModule.begin();
+  // Инициализация модуля конфигурации
+  configurationModule.begin();
+  // Инициализация модуля счетчика
+  //mainCounterModule.begin();
 }
 
 void loop() {
   // Обновление состояния кнопки и индикаторов
-  mainButton.update();
-  indication.update();
+  indicationModule.update();
 
+  // Обрабатываем конфигурацию
+  configurationModule.update();
+  if (configurationModule.isActive()) {
+    return;  // корректно выходим в окно в режиме конфигурации
+  }
+
+  // Обрабатываем счетчик
+  //mainCounterModule.update();
+
+  /*
   // Проверка на одиночное нажатие кнопки
   if (mainButton.isClick()) {
     mode++;
@@ -138,19 +147,10 @@ void loop() {
         break;
     }
   }
+  */
 
-  /*// Обрабатываем конфигурацию
-  configurationModule.update();
-  if (configurationModule.isActive()) {
-    return;  // корректно выходим в окно в режиме конфигурации
-  }
-
-  // Обрабатываем счетчик
-  mainModule.update();
-*/
-  /*
-  mainButton.update();
-  if (mainButton.isClick()) {
+  counterButton.update();
+  if (counterButton.isClick()) {
     Serial.print("Максимальное время работы в секундах: ");
     uint32_t val = eeprom.getMaxOperatingTime();
     Serial.print(val);
@@ -169,5 +169,4 @@ void loop() {
     Serial.print("; В минутах: ");
     Serial.println((uint32_t)val / 60);
   }
-  */
 }

@@ -44,20 +44,22 @@ public:
   void BEEP_BLINK(unsigned int durationMs, unsigned int periodMs);
   void BEEP_BLINK_FOREVER(unsigned int periodMs);
 
+  void ALL_OFF();
+
   /**
      * Метод update() должен вызываться в loop()
      */
   void update();
 
 private:
-  uint8_t greenPin;   // Пин зелёного светодиода
-  uint8_t redPin;     // Пин красного светодиода
-  uint8_t buzzerPin;  // Пин пьезопищалки
+  uint8_t greenPin;                // Пин зелёного светодиода
+  uint8_t redPin;                  // Пин красного светодиода
+  uint8_t buzzerPin;               // Пин пьезопищалки
 
   /**
     *Частота звука пищалки в герцах
     */
-  static constexpr uint16_t BUZZER_FREQUENCY = 1000;
+  static constexpr uint16_t BUZZER_FREQUENCY = 950;
 
   /**
      * Структура для хранения состояния однократного включения (one-shot)
@@ -87,30 +89,14 @@ private:
   };
 
   /**
-    *Текущее состояние однократного включения зеленого светодиода
+    *Текущее состояние однократного включения зеленого/красного/пьезопищалки
     */
-  OneShotState greenState;
-  /**
-    *Текущее состояние однократного включения красного светодиода
-    */
-  OneShotState redState;
-  /**
-    *Текущее состояние однократного включения пьезопищалки
-    */
-  OneShotState buzzerState;
+  OneShotState greenState, redState, buzzerState;
 
   /**
-    *Текущее состояние мигания зеленого светодиода
+    *Текущее состояние мигания зеленого/красного/пьезопищалки
     */
-  BlinkState greenBlink;
-  /**
-    *Текущее состояние мигания красного светодиода
-    */
-  BlinkState redBlink;
-  /**
-    *Текущее состояние мигания пьезопищалки
-    */
-  BlinkState buzzerBlink;
+  BlinkState greenBlink, redBlink, buzzerBlink;
 
   // Управление пищалкой через tone/noTone
   void buzzerOn();
