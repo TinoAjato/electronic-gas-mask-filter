@@ -48,8 +48,9 @@ void ConfigurationModule::update() {
     uint8_t dip = readDIP();
     saveCurrentLevelValue(dip);
 
-    // Сбрасываем CurrentOperatingTime
+    // Сбрасываем CurrentOperatingTime и OperatingLevel
     eeprom.saveCurrentOperatingTime(0);
+    eeprom.saveOperatingLevel(OperatingLevel::LEVEL_OPERATING);
 
     // Выключаем всю индикацию
     indicationModule.ALL_OFF();

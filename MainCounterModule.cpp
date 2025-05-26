@@ -60,11 +60,12 @@ void MainCounterModule::startSession() {
   sessionActive = true;
   delayInProgress = true;
   delayStartMillis = millis();
+  sessionStartMillis = millis();
+  memoryCurrentOperatingTime = 0;
 
   // Подаем индикацию старта: зелёный + писк
   //setLedAndBuzzer(true, false, true);
-  indicationModule.GREEN_ON(1000);
-  indicationModule.BEEP_ON(1000);
+  indicationModule.BEEP_ON(250);
 }
 
 void MainCounterModule::stopSession() {
@@ -92,7 +93,7 @@ void MainCounterModule::stopSession() {
 }
 
 void MainCounterModule::updateSession() {
-  if (delayInProgress) {
+  /*if (delayInProgress) {
     if (millis() - delayStartMillis >= 1500) {
       delayInProgress = false;
       sessionStartMillis = millis();
@@ -104,7 +105,7 @@ void MainCounterModule::updateSession() {
     } else {
       return;  // ждём завершения задержки
     }
-  }
+  }*/
 
   // Сколько прошло времени за текущую сессию
   uint32_t elapsed = (millis() - sessionStartMillis) / 1000;
@@ -130,7 +131,6 @@ void MainCounterModule::updateSession() {
   switch (currentLevel) {
     case OperatingLevel::LEVEL_OPERATING:
       //setLedAndBuzzer(true, false, false);
-      indicationModule.BEEP_OFF();
       indicationModule.RED_OFF();
       indicationModule.GREEN_ON(0);
       break;
@@ -143,7 +143,7 @@ void MainCounterModule::updateSession() {
     case OperatingLevel::LEVEL_BLOCKED:
       //setLedAndBuzzer(false, true, true);
       indicationModule.GREEN_OFF();
-      indicationModule.BEEP_ON(0);
+      indicationModule.BEEP_ON(5000);
       indicationModule.RED_ON(0);
       break;
     default:
