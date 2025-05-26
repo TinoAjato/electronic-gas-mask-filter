@@ -1,4 +1,4 @@
-#include "IndicationModule.h"
+#include "src/IndicationModule.h"
 
 IndicationModule::IndicationModule(uint8_t gLed, uint8_t rLed, uint8_t buzzer)
   : greenPin(gLed), redPin(rLed), buzzerPin(buzzer) {}

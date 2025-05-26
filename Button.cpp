@@ -1,4 +1,4 @@
-#include "Button.h"
+#include "src/Button.h"
 
 Button::Button(uint8_t pin, uint16_t holdTime, uint16_t debounce)
   : pin(pin), holdTime(holdTime), debounce(debounce) {

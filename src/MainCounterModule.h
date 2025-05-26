@@ -1,21 +1,16 @@
 #ifndef MAINCOUNTERMODULE_H
 #define MAINCOUNTERMODULE_H
 
+#include <Arduino.h>
 #include "Button.h"
 #include "MinimalEEPROM.h"
-
-// Возможные уровни работы устройства
-enum OperatingLevel {
-  LEVEL_NONE = 0,     // Не работаем (кнопка не нажата)
-  LEVEL_OPERATING,    // Основная работа (MaxOperatingTime)
-  LEVEL_REPLACEMENT,  // Время замены фильтра (MaxReplacementTime)
-  LEVEL_BLOCKED       // Устройство заблокировано до сброса
-};
+#include "OperatingLevel.h"
+#include "IndicationModule.h"
 
 class MainCounterModule {
 public:
-  // Конструктор принимает: кнопку запуска, объект EEPROM и пины светодиодов/пьезо
-  MainCounterModule(Button& btn, MinimalEEPROM& eeprom, uint8_t greenLed, uint8_t redLed, uint8_t buzzerPin);
+  // Конструктор принимает: кнопку запуска, объект EEPROM, пины светодиодов/пьезо и объект индикации
+  MainCounterModule(Button& counterButton, MinimalEEPROM& eeprom, uint8_t greenLed, uint8_t redLed, uint8_t buzzerPin, IndicationModule& indicationModule);
 
   // Инициализация пинов
   void begin();
@@ -24,8 +19,9 @@ public:
   void update();
 
 private:
-  Button& mainButton;
+  Button& counterButton;
   MinimalEEPROM& eeprom;
+  IndicationModule& indicationModule;  // Объект работы индикицией
 
   uint8_t pinGreen;
   uint8_t pinRed;

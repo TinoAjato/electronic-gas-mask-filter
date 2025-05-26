@@ -5,6 +5,7 @@
 #include "Button.h"
 #include "MinimalEEPROM.h"
 #include "IndicationModule.h"
+#include "OperatingLevel.h"
 
 #define MAX_PINS_SIZE 4  // Размер массива пинов DIP-переключателя
 

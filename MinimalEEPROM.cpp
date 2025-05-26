@@ -1,5 +1,6 @@
 #include "HardwareSerial.h"
-#include "MinimalEEPROM.h"
+#include "src/MinimalEEPROM.h"
+#include "src/OperatingLevel.h"
 
 void MinimalEEPROM::begin() {
   // инициализация EEPROM
@@ -55,6 +56,15 @@ void MinimalEEPROM::saveCurrentOperatingTime(uint32_t seconds) {
   }
 }
 
+// Сохраняем "уровень работы фильтра"
+void MinimalEEPROM::saveOperatingLevel(OperatingLevel level) {
+  OperatingLevel existing;
+  EEPROM.get(ADDR_OPERATING_LEVEL, existing);
+  if (existing != level) {
+    EEPROM.put(ADDR_OPERATING_LEVEL, level);
+  }
+}
+
 // Чтение "максимального времени работы"
 uint32_t MinimalEEPROM::getMaxOperatingTime() {
   uint32_t val;
@@ -88,4 +98,11 @@ uint32_t MinimalEEPROM::getCurrentOperatingTime() {
   } else {
     return 0xFFFFFFFF;  // Повреждение или данные были некорректно записаны
   }
+}
+
+// Чтение "уровень работы фильтра"
+OperatingLevel MinimalEEPROM::getOperatingLevel() {
+  OperatingLevel level;
+  EEPROM.get(ADDR_OPERATING_LEVEL, level);
+  return level;
 }

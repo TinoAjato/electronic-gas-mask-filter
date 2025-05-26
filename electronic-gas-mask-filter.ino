@@ -1,8 +1,8 @@
-#include "Button.h"
-#include "MinimalEEPROM.h"
-#include "ConfigurationModule.h"
-#include "MainCounterModule.h"
-#include "IndicationModule.h"
+#include "src/Button.h"
+#include "src/MinimalEEPROM.h"
+#include "src/ConfigurationModule.h"
+#include "src/MainCounterModule.h"
+#include "src/IndicationModule.h"
 
 //******* Работа с памятью EEPROM *******
 MinimalEEPROM eeprom;
@@ -23,7 +23,7 @@ ConfigurationModule configurationModule(configurationButton, eeprom, DIPPins, in
 // Кнопка - старт счетчика
 Button counterButton(2);
 // Объявляем модуль счетчика
-//MainCounterModule mainCounterModule(counterButton, eeprom, 11, 12, 13);
+MainCounterModule mainCounterModule(counterButton, eeprom, 11, 12, 13, indicationModule);
 
 void setup() {
   /** НА УДАЛЕНИЕ **/
@@ -56,11 +56,11 @@ void setup() {
   // Инициализация модуля конфигурации
   configurationModule.begin();
   // Инициализация модуля счетчика
-  //mainCounterModule.begin();
+  mainCounterModule.begin();
 }
 
 void loop() {
-  // Обновление состояния кнопки и индикаторов
+  // Обновление состояния индикаторов
   indicationModule.update();
 
   // Обрабатываем конфигурацию
@@ -70,7 +70,7 @@ void loop() {
   }
 
   // Обрабатываем счетчик
-  //mainCounterModule.update();
+  mainCounterModule.update();
 
   /*
   // Проверка на одиночное нажатие кнопки
@@ -148,7 +148,7 @@ void loop() {
     }
   }
   */
-
+  /*
   counterButton.update();
   if (counterButton.isClick()) {
     Serial.print("Максимальное время работы в секундах: ");
@@ -169,4 +169,5 @@ void loop() {
     Serial.print("; В минутах: ");
     Serial.println((uint32_t)val / 60);
   }
+  */
 }

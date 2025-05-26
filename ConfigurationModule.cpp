@@ -1,5 +1,5 @@
 #include "HardwareSerial.h"
-#include "ConfigurationModule.h"
+#include "src/ConfigurationModule.h"
 
 ConfigurationModule::ConfigurationModule(Button &configurationButton, MinimalEEPROM &eeprom, const uint8_t (&pins)[MAX_PINS_SIZE], IndicationModule &indicationModule)
   : configurationButton(configurationButton), eeprom(eeprom), configModeActive(false), level(1), indicationModule(indicationModule) {
@@ -32,8 +32,9 @@ void ConfigurationModule::update() {
       indicationModule.ALL_OFF();
 
     } else if (configurationButton.isClick()) {
-      // Одиночный клик вне режима конфигурации -> сброс CurrentOperatingTime
+      // Одиночный клик вне режима конфигурации -> сброс CurrentOperatingTime и OperatingLevel
       eeprom.saveCurrentOperatingTime(0);
+      eeprom.saveOperatingLevel(OperatingLevel::LEVEL_OPERATING);
     }
 
     // Внешний режим, просто выходим
@@ -64,17 +65,18 @@ void ConfigurationModule::update() {
     saveCurrentLevelValue(dip);
     // Переключаем уровень 1<->2
     level = (level == 1) ? 2 : 1;
+
+    // Выключаем всю индикацию
+    indicationModule.ALL_OFF();
   }
 
   // Включаем соответствующий светодиод и пищалку
   if (level == 1) {
     // Уровень 1: зелёный LED
-    indicationModule.RED_OFF();
     indicationModule.GREEN_BLINK_FOREVER(BLINK_INTERVAL);
     indicationModule.BEEP_BLINK_FOREVER(BLINK_INTERVAL);
   } else {
     // Уровень 2: красный LED
-    indicationModule.GREEN_OFF();
     indicationModule.RED_BLINK_FOREVER(BLINK_INTERVAL);
     indicationModule.BEEP_BLINK_FOREVER(BLINK_INTERVAL);
   }

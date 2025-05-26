@@ -1,12 +1,13 @@
-#include "MainCounterModule.h"
-#include <Arduino.h>
+#include "src/MainCounterModule.h"
 
-MainCounterModule::MainCounterModule(Button& btn, MinimalEEPROM& eep, uint8_t greenLed, uint8_t redLed, uint8_t buzzer)
-  : mainButton(btn), eeprom(eep), pinGreen(greenLed), pinRed(redLed), pinBuzzer(buzzer),
-    currentLevel(LEVEL_NONE), sessionActive(false), memoryCurrentOperatingTime(0),
-    delayInProgress(false), delayStartMillis(0), sessionStartMillis(0), lastEepromSaveMillis(0) {}
+MainCounterModule::MainCounterModule(Button& counterButton, MinimalEEPROM& eeprom, uint8_t greenLed, uint8_t redLed, uint8_t buzzer, IndicationModule& indicationModule)
+  : counterButton(counterButton), eeprom(eeprom), pinGreen(greenLed), pinRed(redLed), pinBuzzer(buzzer),
+    currentLevel(OperatingLevel::LEVEL_OPERATING), sessionActive(false), memoryCurrentOperatingTime(0),
+    delayInProgress(false), delayStartMillis(0), sessionStartMillis(0), lastEepromSaveMillis(0), indicationModule(indicationModule) {}
 
 void MainCounterModule::begin() {
+  indicationModule.ALL_OFF();
+
   pinMode(pinGreen, OUTPUT);
   pinMode(pinRed, OUTPUT);
   pinMode(pinBuzzer, OUTPUT);
@@ -14,20 +15,22 @@ void MainCounterModule::begin() {
   // Инициализируем уровень и восстановленное время
   memoryCurrentOperatingTime = eeprom.getCurrentOperatingTime();
 
-  // Заглушка — читаем уровень из EEPROM, когда будет реализовано
-  currentLevel = LEVEL_OPERATING;  // по умолчанию стартуем с первого уровня
+  // Читаем уровень из EEPROM
+  currentLevel = eeprom.getOperatingLevel();
 
-  Serial.println("MainCounterModule::begin");
   Serial.print("MemoryCurrentOperatingTime: ");
   Serial.println(memoryCurrentOperatingTime);
   Serial.print("CurrentLevel: ");
-  Serial.println(currentLevel);
+  Serial.println((int)currentLevel);
 }
 
 void MainCounterModule::update() {
-  mainButton.update();
+  counterButton.update();
 
-  if (mainButton.isPressed()) {
+  // Читаем уровень из EEPROM
+  currentLevel = eeprom.getOperatingLevel();
+
+  if (counterButton.isPressed()) {
     if (!sessionActive) {
       startSession();
     }
@@ -36,12 +39,17 @@ void MainCounterModule::update() {
     if (sessionActive) {
       stopSession();
     }
-    /*// Если заблокировано — продолжаем пищать и гореть
-    if (currentLevel == LEVEL_BLOCKED) {
-      setLedAndBuzzer(false, true, true);
+
+    // Если заблокировано — продолжаем пищать и гореть
+    if (currentLevel == OperatingLevel::LEVEL_BLOCKED) {
+      //setLedAndBuzzer(false, true, true);
+      indicationModule.GREEN_OFF();
+      indicationModule.BEEP_OFF();
+      indicationModule.RED_ON(0);
     } else {
-      setLedAndBuzzer(false, false, false);
-    }*/
+      //setLedAndBuzzer(false, false, false);
+      indicationModule.ALL_OFF();
+    }
   }
 }
 
@@ -54,7 +62,9 @@ void MainCounterModule::startSession() {
   delayStartMillis = millis();
 
   // Подаем индикацию старта: зелёный + писк
-  setLedAndBuzzer(true, false, true);
+  //setLedAndBuzzer(true, false, true);
+  indicationModule.GREEN_ON(1000);
+  indicationModule.BEEP_ON(1000);
 }
 
 void MainCounterModule::stopSession() {
@@ -70,12 +80,15 @@ void MainCounterModule::stopSession() {
   eeprom.saveCurrentOperatingTime(memoryCurrentOperatingTime);
 
   // Переход в BLOCKED, если мы были на замене фильтра
-  if (currentLevel == LEVEL_REPLACEMENT) {
-    currentLevel = LEVEL_BLOCKED;
+  if (currentLevel == OperatingLevel::LEVEL_REPLACEMENT) {
+    currentLevel = OperatingLevel::LEVEL_BLOCKED;
   }
 
+  eeprom.saveOperatingLevel(currentLevel);
+
   // Свет и звук гасим
-  setLedAndBuzzer(false, false, false);
+  //setLedAndBuzzer(false, false, false);
+  indicationModule.ALL_OFF();
 }
 
 void MainCounterModule::updateSession() {
@@ -84,7 +97,10 @@ void MainCounterModule::updateSession() {
       delayInProgress = false;
       sessionStartMillis = millis();
       lastEepromSaveMillis = sessionStartMillis;
-      setLedAndBuzzer(true, false, false);  // зелёный, без звука
+
+      indicationModule.ALL_OFF();
+      // indicationModule.GREEN_ON(0);
+
     } else {
       return;  // ждём завершения задержки
     }
@@ -101,30 +117,42 @@ void MainCounterModule::updateSession() {
   }
 
   // Проверка уровней
-  if (currentLevel == LEVEL_OPERATING && currentTime >= eeprom.getMaxOperatingTime()) {
-    currentLevel = LEVEL_REPLACEMENT;
+  if (currentLevel == OperatingLevel::LEVEL_OPERATING && currentTime >= eeprom.getMaxOperatingTime()) {
+    currentLevel = OperatingLevel::LEVEL_REPLACEMENT;
+    eeprom.saveOperatingLevel(currentLevel);
   }
-  if (currentLevel == LEVEL_REPLACEMENT && currentTime >= (eeprom.getMaxOperatingTime() + eeprom.getMaxReplacementTime())) {
-    currentLevel = LEVEL_BLOCKED;
+  if (currentLevel == OperatingLevel::LEVEL_REPLACEMENT && currentTime >= (eeprom.getMaxOperatingTime() + eeprom.getMaxReplacementTime())) {
+    currentLevel = OperatingLevel::LEVEL_BLOCKED;
+    eeprom.saveOperatingLevel(currentLevel);
   }
 
   // Управление индикацией по текущему уровню
   switch (currentLevel) {
-    case LEVEL_OPERATING:
-      setLedAndBuzzer(true, false, false);
+    case OperatingLevel::LEVEL_OPERATING:
+      //setLedAndBuzzer(true, false, false);
+      indicationModule.BEEP_OFF();
+      indicationModule.RED_OFF();
+      indicationModule.GREEN_ON(0);
       break;
-    case LEVEL_REPLACEMENT:
-      blinkRedAndBeep();
+    case OperatingLevel::LEVEL_REPLACEMENT:
+      //blinkRedAndBeep();
+      indicationModule.GREEN_OFF();
+      indicationModule.BEEP_BLINK_FOREVER(500);
+      indicationModule.RED_BLINK_FOREVER(500);
       break;
-    case LEVEL_BLOCKED:
-      setLedAndBuzzer(false, true, true);
+    case OperatingLevel::LEVEL_BLOCKED:
+      //setLedAndBuzzer(false, true, true);
+      indicationModule.GREEN_OFF();
+      indicationModule.BEEP_ON(0);
+      indicationModule.RED_ON(0);
       break;
     default:
-      setLedAndBuzzer(false, false, false);
+      //setLedAndBuzzer(false, false, false);
+      indicationModule.ALL_OFF();
       break;
   }
 }
-
+/*
 void MainCounterModule::setLedAndBuzzer(bool greenOn, bool redOn, bool buzzerOn) {
   digitalWrite(pinGreen, greenOn ? HIGH : LOW);
   digitalWrite(pinRed, redOn ? HIGH : LOW);
@@ -136,3 +164,4 @@ void MainCounterModule::blinkRedAndBeep() {
   digitalWrite(pinRed, state ? HIGH : LOW);
   digitalWrite(pinBuzzer, state ? HIGH : LOW);
 }
+*/
