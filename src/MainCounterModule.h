@@ -9,57 +9,63 @@
 
 class MainCounterModule {
 public:
-  // Конструктор принимает: кнопку запуска, объект EEPROM, пины светодиодов/пьезо и объект индикации
-  MainCounterModule(Button& counterButton, MinimalEEPROM& eeprom, uint8_t greenLed, uint8_t redLed, uint8_t buzzerPin, IndicationModule& indicationModule);
-
-  // Инициализация пинов
+  MainCounterModule(Button& counterButton, MinimalEEPROM& eeprom, IndicationModule& indicationModule);
   void begin();
-
-  // Обновление логики, вызывается в каждом loop()
   void update();
 
 private:
+  //******* Внешние зависимости *******
   Button& counterButton;
   MinimalEEPROM& eeprom;
-  IndicationModule& indicationModule;  // Объект работы индикицией
+  IndicationModule& indicationModule;
 
-  uint8_t pinGreen;
-  uint8_t pinRed;
-  uint8_t pinBuzzer;
+  //******* Константы *******
+  static constexpr uint32_t EEPROM_SAVE_INTERVAL_MS = 30000;
+  static constexpr uint32_t START_BEEP_DURATION_MS = 200;
 
-  // Текущее состояние уровня (MaxOperatingTime / MaxReplacementTime / BLOCKED)
-  OperatingLevel currentLevel;
-
-  // Время старта текущей сессии (millis)
+  //******* Состояние *******
+  /*
+   * Локальная переменная текущего времени работы (в секундах)
+   */
+  uint32_t memoryCurrentOperatingTime;
+  /*
+   * Время старта текущей сессии (millis)
+   */
   uint32_t sessionStartMillis;
-
-  // Время последнего сохранения в EEPROM
+  /*
+   * Время последнего сохранения в EEPROM
+   */
   uint32_t lastEepromSaveMillis;
 
-  // Индикатор активной сессии (mainButton удерживается)
-  bool sessionActive;
+  /*
+   * Индикатор запуска BEEP-а 1 раз, после отжатия counterButton
+   */
+  bool oneBeepFlag;
 
-  // Локальная переменная текущего времени работы (в секундах)
-  uint32_t memoryCurrentOperatingTime;
+  //******* Менеджер сессии *******
+  class SessionManager {
+  public:
+    void start(uint32_t now);
+    uint32_t stop(uint32_t now);
+    uint32_t elapsed(uint32_t now) const;
+    bool isActive() const;
 
-  // Флаги и переменные для неблокирующей задержки старта
-  bool delayInProgress;
-  uint32_t delayStartMillis;
+  private:
+    uint32_t sessionStart = 0;
+    /*
+     * Индикатор активной сессии (counterButton удерживается)
+     */
+    bool active = false;
+  };
 
-  // Запуск новой сессии
-  void startSession();
+  //******* Внутренние экземпляры *******
+  SessionManager sessionManager;
 
-  // Завершение сессии (отпускание кнопки)
-  void stopSession();
-
-  // Основной обработчик сессии (выполняется при активной кнопке)
-  void updateSession();
-
-  // Управление светодиодами и пищалкой
-  void setLedAndBuzzer(bool greenOn, bool redOn, bool buzzerOn);
-
-  // Моргание красного + писк
-  void blinkRedAndBeep();
+  //******* Методы *******
+  void handlePressed();
+  void handleReleased();
+  void updateIndication();
+  void updateOperatingLevel(uint32_t totalTime, uint32_t maxOperating, uint32_t maxReplacement);
 };
 
 #endif
